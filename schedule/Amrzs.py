@@ -148,11 +148,3 @@ class Amrzs:
                     session.join_pods(topic='entertainment', engagement_mode='light')
                 except:
                     print(traceback.format_exc())
-
-# ig_name = 'wixjsuttles23017'
-# ig_passwd = 'wix123.'
-# proxy_ip = '172.15.104.201'
-# proxy_port = 33001
-# #
-# amrzs = Amrzs(ig_name=ig_name, ig_passwd=ig_passwd)
-# amrzs.daily_maintenance()
