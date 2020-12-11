@@ -2,36 +2,35 @@
 # import built-in & third-party modules
 import random
 import re
-
 from re import findall
 
-# import InstaPy modules
-from .constants import MEDIA_PHOTO
-from .constants import MEDIA_CAROUSEL
-from .constants import MEDIA_ALL_TYPES
-from .time_util import sleep
-from .util import format_number
-from .util import add_user_to_blacklist
-from .util import click_element
-from .util import is_private_profile
-from .util import is_page_available
-from .util import update_activity
-from .util import web_address_navigator
-from .util import get_number_of_posts
-from .util import get_action_delay
-from .util import explicit_wait
-from .util import extract_text_from_element
-from .util import evaluate_mandatory_words
-from .quota_supervisor import quota_supervisor
-from .follow_util import get_following_status
-from .event import Event
-from .xpath import read_xpath
-from .comment_util import open_comment_section
-
-# import exceptions
-from selenium.common.exceptions import WebDriverException
 from selenium.common.exceptions import NoSuchElementException
 from selenium.common.exceptions import StaleElementReferenceException
+# import exceptions
+from selenium.common.exceptions import WebDriverException
+
+from .comment_util import open_comment_section
+from .constants import MEDIA_ALL_TYPES
+from .constants import MEDIA_CAROUSEL
+# import InstaPy modules
+from .constants import MEDIA_PHOTO
+from .event import Event
+from .follow_util import get_following_status
+from .quota_supervisor import quota_supervisor
+from .time_util import sleep
+from .util import add_user_to_blacklist
+from .util import click_element
+from .util import evaluate_mandatory_words
+from .util import explicit_wait
+from .util import extract_text_from_element
+from .util import format_number
+from .util import get_action_delay
+from .util import get_number_of_posts
+from .util import is_page_available
+from .util import is_private_profile
+from .util import update_activity
+from .util import web_address_navigator
+from .xpath import read_xpath
 
 
 def get_links_from_feed(browser, amount, num_of_search, logger):
@@ -829,15 +828,19 @@ def like_image(browser, username, blacklist, logger, logfolder, total_liked_img)
 def verify_liked_image(browser, logger):
     """Check for a ban on likes using the last liked image"""
 
-    browser.refresh()
-    unlike_xpath = read_xpath(like_image.__name__, "unlike")
-    like_elem = browser.find_elements_by_xpath(unlike_xpath)
+    try:
+        browser.refresh()
+        unlike_xpath = read_xpath(like_image.__name__, "unlike")
+        like_elem = browser.find_elements_by_xpath(unlike_xpath)
 
-    if len(like_elem) == 1:
+        if len(like_elem) == 1:
+            return True
+        else:
+            logger.warning("--> Image was NOT liked! You have a BLOCK on likes!")
+            return False
+    except WebDriverException:
+        logger.warning(WebDriverException)
         return True
-    else:
-        logger.warning("--> Image was NOT liked! You have a BLOCK on likes!")
-        return False
 
 
 def get_tags(browser, url):

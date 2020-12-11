@@ -1,25 +1,25 @@
 """OS Modules environ method to get the setup vars from the Environment"""
-# import built-in & third-party modules
-import time
-import random
-import os
 import csv
 import json
-import requests
-import unicodedata
 import logging
 import logging.handlers
-
-from datetime import datetime
-from datetime import timedelta
-from math import ceil
-from sys import platform
-from platform import python_version
-from selenium import webdriver
-from selenium.webdriver import DesiredCapabilities
-from logging.handlers import RotatingFileHandler
+import os
+import random
+# import built-in & third-party modules
+import time
 from contextlib import contextmanager
 from copy import deepcopy
+from datetime import datetime
+from datetime import timedelta
+from logging.handlers import RotatingFileHandler
+from math import ceil
+from platform import python_version
+from sys import platform
+
+import requests
+import unicodedata
+from selenium import webdriver
+from selenium.webdriver import DesiredCapabilities
 
 try:
     from pyvirtualdisplay import Display
@@ -298,6 +298,8 @@ class InstaPy:
             "food",
             "travel",
             "sports",
+            "cat",
+            "huachenyu",
             "entertainment",
         ]
         self.allowed_pod_engagement_modes = ["no_comments", "light", "normal", "heavy"]

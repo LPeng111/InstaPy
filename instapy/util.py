@@ -1,50 +1,47 @@
 """ Common utilities """
-# import built-in & third-party modules
-import time
+import csv
 import datetime
+import json
+import os
 import random
 import re
-import regex
 import signal
-import os
-import sys
-import csv
 import sqlite3
-import json
-import emoji
-
+import sys
+# import built-in & third-party modules
+import time
+from argparse import ArgumentParser
+from contextlib import contextmanager
 from math import ceil
-from math import radians
 from math import cos
 from math import degrees as rad2deg
-from sys import exit as clean_exit
-from platform import system
+from math import radians
 from platform import python_version
-from subprocess import call
+from platform import system
 from random import randint
-from contextlib import contextmanager
+from subprocess import call
+from sys import exit as clean_exit
 from tempfile import gettempdir
-from argparse import ArgumentParser
 
+import emoji
+import regex
 from emoji.unicode_codes import UNICODE_EMOJI
-from selenium.webdriver.support.ui import WebDriverWait
-from selenium.webdriver.support import expected_conditions as ec
+# import exceptions
+from selenium.common.exceptions import NoSuchElementException
+from selenium.common.exceptions import TimeoutException
+from selenium.common.exceptions import WebDriverException
 from selenium.webdriver.common.by import By
+from selenium.webdriver.support import expected_conditions as ec
+from selenium.webdriver.support.ui import WebDriverWait
 
-# import InstaPy modules
-from .xpath import read_xpath
+from .database_engine import get_database
 from .event import Event
+from .quota_supervisor import quota_supervisor
 from .settings import Settings
 from .time_util import sleep
 from .time_util import sleep_actual
-from .database_engine import get_database
-from .quota_supervisor import quota_supervisor
-
-# import exceptions
-from selenium.common.exceptions import NoSuchElementException
-from selenium.common.exceptions import WebDriverException
-from selenium.common.exceptions import TimeoutException
-
+# import InstaPy modules
+from .xpath import read_xpath
 
 default_profile_pic_instagram = [
     "https://instagram.flas1-2.fna.fbcdn.net/vp"
@@ -1240,7 +1237,12 @@ def web_address_navigator(browser, link):
                 browser.get(link)
                 # update server calls
                 update_activity(browser, state=None)
-                sleep(2)
+                while True:
+                    page_state = browser.execute_script("return document.readyState")
+                    if page_state == 'complete':
+                        break
+                    print('Wait for page load complete, current state: {}'.format(page_state))
+                    sleep(1)
                 break
 
             except TimeoutException as exc:
@@ -1550,13 +1552,21 @@ def check_authorization(browser, username, method, logger, notify=True):
         # navigate to owner's profile page only if it is on an unusual page
         current_url = get_current_url(browser)
         if (
-            not current_url
-            or "https://www.instagram.com" not in current_url
-            or "https://www.instagram.com/graphql/" in current_url
+                not current_url
+                or "https://www.instagram.com" not in current_url
+                or "https://www.instagram.com/graphql/" in current_url
         ):
             profile_link = "https://www.instagram.com/{}/".format(username)
             web_address_navigator(browser, profile_link)
 
+        logger.info(get_current_url(browser))
+        while True:
+            sleep(1)
+            page_state = browser.execute_script("return document.readyState")
+            if page_state == 'complete':
+                logger.info('- Profile page load complete')
+                break
+            logger.info('- Wait for profile page load complete, current state: ' + page_state)
         # if user is not logged in, `activity_counts` will be `None`- JS `null`
         try:
             activity_counts = browser.execute_script(

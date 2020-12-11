@@ -1,32 +1,30 @@
 """Module only used for the login part of the script"""
+import json
+import os
 # import built-in & third-party modules
 import pickle
-import socket
-import os
-import json
 import random
 
+from selenium.common.exceptions import MoveTargetOutOfBoundsException
+# import exceptions
+from selenium.common.exceptions import NoSuchElementException
+from selenium.common.exceptions import WebDriverException
 from selenium.webdriver.common.action_chains import ActionChains
 from selenium.webdriver.common.keys import Keys
 
 # import InstaPy modules
 from .time_util import sleep
+from .util import check_authorization
+from .util import click_element
+from .util import explicit_wait
+from .util import reload_webpage
 from .util import update_activity
 from .util import web_address_navigator
-from .util import explicit_wait
-from .util import click_element
-from .util import check_authorization
-from .util import reload_webpage
 from .xpath import read_xpath
-
-# import exceptions
-from selenium.common.exceptions import NoSuchElementException
-from selenium.common.exceptions import WebDriverException
-from selenium.common.exceptions import MoveTargetOutOfBoundsException
 
 
 def bypass_suspicious_login(
-    browser, logger, logfolder, bypass_security_challenge_using
+        browser, logger, logfolder, bypass_security_challenge_using
 ):
     """ Bypass suspicious loggin attempt verification. """
 
@@ -165,35 +163,35 @@ def check_browser(browser, logfolder, logger, proxy_address):
         browser.get("view-source:https://ip4.seeip.org/geoip")
         pre = browser.find_element_by_tag_name("pre").text
         current_ip_info = json.loads(pre)
-        if (
-            proxy_address is not None
-            and socket.gethostbyname(proxy_address) != current_ip_info["ip"]
-        ):
-            logger.warn("- Proxy is set, but it's not working properly")
-            logger.warn(
-                '- Expected Proxy IP is "{}", and the current IP is "{}"'.format(
-                    proxy_address, current_ip_info["ip"]
-                )
+        # if (
+        #     proxy_address is not None
+        #     and socket.gethostbyname(proxy_address) != current_ip_info["ip"]
+        # ):
+        #     logger.warn("- Proxy is set, but it's not working properly")
+        #     logger.warn(
+        #         '- Expected Proxy IP is "{}", and the current IP is "{}"'.format(
+        #             proxy_address, current_ip_info["ip"]
+        #         )
+        #     )
+        #     logger.warn("- Try again or disable the Proxy Address on your setup")
+        #     logger.warn("- Aborting connection...")
+        #     return False
+        # else:
+        logger.info("- Internet Connection Status: ok")
+        logger.info(
+            '- Current IP is "{}" and it\'s from "{}/{}"'.format(
+                current_ip_info["ip"],
+                current_ip_info["country"],
+                current_ip_info["country_code"],
             )
-            logger.warn("- Try again or disable the Proxy Address on your setup")
-            logger.warn("- Aborting connection...")
-            return False
-        else:
-            logger.info("- Internet Connection Status: ok")
-            logger.info(
-                '- Current IP is "{}" and it\'s from "{}/{}"'.format(
-                    current_ip_info["ip"],
-                    current_ip_info["country"],
-                    current_ip_info["country_code"],
-                )
-            )
-            update_activity(
-                browser,
-                action=None,
-                state="Internet connection is ok",
-                logfolder=logfolder,
-                logger=logger,
-            )
+        )
+        update_activity(
+            browser,
+            action=None,
+            state="Internet connection is ok",
+            logfolder=logfolder,
+            logger=logger,
+        )
     except Exception:
         logger.warn("- Internet Connection Status: error")
         update_activity(
@@ -239,11 +237,13 @@ def login_user(
         if not check_browser(browser, logfolder, logger, proxy_address):
             return False
 
+    logger.info('- visit home page')
     ig_homepage = "https://www.instagram.com"
     web_address_navigator(browser, ig_homepage)
     cookie_loaded = False
 
     # try to load cookie from username
+    logger.info('- try to load cookie from username')
     try:
         for cookie in pickle.load(
             open("{0}{1}_cookie.pkl".format(logfolder, username), "rb")
@@ -254,10 +254,12 @@ def login_user(
         logger.warn("Cookie file not found, creating cookie...")
 
     # force refresh after cookie load or check_authorization() will FAIL
+    logger.info('- force refresh after cookie load or check_authorization() will FAIL')
     reload_webpage(browser)
 
     # cookie has been LOADED, so the user SHOULD be logged in
     # check if the user IS logged in
+    logger.info('- check if the user IS logged in')
     login_state = check_authorization(
         browser, username, "activity counts", logger, False
     )
@@ -298,7 +300,15 @@ def login_user(
         web_address_navigator(browser, ig_homepage)
 
     # Check if the first div is 'Create an Account' or 'Log In'
+    logger.info('- Check if the first div is "Create an Account" or "Log In"')
     try:
+        while True:
+            page_state = browser.execute_script("return document.readyState")
+            if page_state == 'complete':
+                logger.info('- Home page load complete at row 305')
+                break
+            logger.info('- Wait for home page load complete, current state: ' + page_state + ', row 307')
+            sleep(1)
         login_elem = browser.find_element_by_xpath(
             read_xpath(login_user.__name__, "login_elem")
         )
@@ -343,23 +353,25 @@ def login_user(
     # wait until the 'username' input element is located and visible
     input_username_XP = read_xpath(login_user.__name__, "input_username_XP")
     explicit_wait(browser, "VOEL", [input_username_XP, "XPath"], logger)
+    sleep(5)
 
     # user
     input_username = browser.find_element_by_xpath(input_username_XP)
 
+    sleep(5)
     (
         ActionChains(browser)
-        .move_to_element(input_username)
-        .click()
-        .send_keys(username)
-        .perform()
+            .move_to_element(input_username)
+            .click()
+            .send_keys(username)
+            .perform()
     )
 
     # update server calls for both 'click' and 'send_keys' actions
     for _ in range(2):
         update_activity(browser, state=None)
 
-    sleep(1)
+    sleep(2)
 
     # password
     input_password = browser.find_elements_by_xpath(
@@ -377,7 +389,7 @@ def login_user(
         .perform()
     )
 
-    sleep(1)
+    sleep(2)
 
     (
         ActionChains(browser)
