@@ -3,9 +3,9 @@ import pymysql
 
 class MysqlUtils():
     def __init__(self):
-        self.host = 'xxx'
-        self.user = 'xxx'
-        self.password = 'xxx.'
+        self.host = 'node4-devsvr.realsvr.cs-xc-idc1-area1.singhand.com'
+        self.user = 'cralwerdata'
+        self.password = 'cralwerdatastoreParch2016.'
         self.port = 3306
         self.database = 'CrawlerDBStore'
 

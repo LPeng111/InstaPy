@@ -113,32 +113,32 @@ def evaluate_mandatory_words(text, mandatory_words_list, level=0):
 
 
 def validate_username(
-    browser,
-    username_or_link,
-    own_username,
-    ignore_users,
-    blacklist,
-    potency_ratio,
-    delimit_by_numbers,
-    max_followers,
-    max_following,
-    min_followers,
-    min_following,
-    min_posts,
-    max_posts,
-    skip_private,
-    skip_private_percentage,
-    skip_no_profile_pic,
-    skip_no_profile_pic_percentage,
-    skip_business,
-    skip_non_business,
-    skip_business_percentage,
-    skip_business_categories,
-    dont_skip_business_categories,
-    skip_bio_keyword,
-    mandatory_bio_keywords,
-    logger,
-    logfolder,
+        browser,
+        username_or_link,
+        own_username,
+        ignore_users,
+        blacklist,
+        potency_ratio,
+        delimit_by_numbers,
+        max_followers,
+        max_following,
+        min_followers,
+        min_following,
+        min_posts,
+        max_posts,
+        skip_private,
+        skip_private_percentage,
+        skip_no_profile_pic,
+        skip_no_profile_pic_percentage,
+        skip_business,
+        skip_non_business,
+        skip_business_percentage,
+        skip_business_categories,
+        dont_skip_business_categories,
+        skip_bio_keyword,
+        mandatory_bio_keywords,
+        logger,
+        logfolder,
 ):
     """Check if we can interact with the user"""
 
@@ -212,9 +212,9 @@ def validate_username(
     # Checks the potential of target user by relationship status in order
     # to delimit actions within the desired boundary
     if (
-        potency_ratio
-        or delimit_by_numbers
-        and (max_followers or max_following or min_followers or min_following)
+            potency_ratio
+            or delimit_by_numbers
+            and (max_followers or max_following or min_followers or min_following)
     ):
 
         relationship_ratio = None
@@ -367,8 +367,8 @@ def validate_username(
             logger.error("~cannot get the post profile pic url")
             return False, "---> Sorry, couldn't get if user profile pic url\n"
         if (
-            profile_pic in default_profile_pic_instagram
-            or str(profile_pic).find("11906329_960233084022564_1448528159_a.jpg") > 0
+                profile_pic in default_profile_pic_instagram
+                or str(profile_pic).find("11906329_960233084022564_1448528159_a.jpg") > 0
         ) and (random.randint(0, 100) <= skip_no_profile_pic_percentage):
             return False, "{} has default instagram profile picture\n".format(username)
 
@@ -403,7 +403,7 @@ def validate_username(
                 # skip if not in dont_include
                 if category not in dont_skip_business_categories:
                     if len(dont_skip_business_categories) == 0 and (
-                        random.randint(0, 100) <= skip_business_percentage
+                            random.randint(0, 100) <= skip_business_percentage
                     ):
                         return False, "'{}' has a business account\n".format(username)
                     else:
@@ -443,7 +443,7 @@ def validate_username(
                 )
         # the mandatory keywords applies to the username as well as the bio text
         if not evaluate_mandatory_words(
-            username + " " + profile_bio, mandatory_bio_keywords
+                username + " " + profile_bio, mandatory_bio_keywords
         ):
             return False, "Mandatory bio keywords not found"
 
@@ -452,9 +452,9 @@ def validate_username(
 
 
 def getUserData(
-    query,
-    browser,
-    basequery="return window.__additionalData[Object.keys(window.__additionalData)[0]].data.",
+        query,
+        browser,
+        basequery="return window.__additionalData[Object.keys(window.__additionalData)[0]].data.",
 ):
     try:
         data = browser.execute_script(basequery + query)
@@ -470,7 +470,7 @@ def getUserData(
 
 
 def update_activity(
-    browser=None, action="server_calls", state=None, logfolder=None, logger=None
+        browser=None, action="server_calls", state=None, logfolder=None, logger=None
 ):
     """
     1. Record every Instagram server call (page load, content load, likes,
@@ -650,10 +650,10 @@ def get_active_users(browser, username, posts, boundary, logger):
         "~collecting the entire usernames from posts without a boundary!\n"
         if boundary is None
         else "~collecting only the visible usernames from posts without scrolling "
-        "at the boundary of zero..\n"
+             "at the boundary of zero..\n"
         if boundary == 0
         else "~collecting the usernames from posts with the boundary of {}"
-        "\n".format(boundary)
+             "\n".format(boundary)
     )
     # posts argument is the number of posts to collect usernames
     logger.info(
@@ -757,8 +757,8 @@ def get_active_users(browser, username, posts, boundary, logger):
                 )
                 # check if it should keep scrolling down or exit
                 if (
-                    scroll_height >= tmp_scroll_height
-                    and len(user_list) > user_list_len
+                        scroll_height >= tmp_scroll_height
+                        and len(user_list) > user_list_len
                 ):
                     tmp_scroll_height = scroll_height
                     user_list_len = len(user_list)
@@ -794,13 +794,13 @@ def get_active_users(browser, username, posts, boundary, logger):
                         break
 
                 if (
-                    scroll_it is False
-                    and likers_count
-                    and likers_count - 1 > len(user_list)
+                        scroll_it is False
+                        and likers_count
+                        and likers_count - 1 > len(user_list)
                 ):
 
                     if (
-                        boundary is not None and likers_count - 1 > boundary
+                            boundary is not None and likers_count - 1 > boundary
                     ) or boundary is None:
 
                         if try_again <= 1:  # can increase the amount of tries
@@ -1216,6 +1216,7 @@ def web_address_navigator(browser, link):
     navigated and if it is different, it does navigate"""
     current_url = get_current_url(browser)
     total_timeouts = 0
+    total_web_driver_error = 0
     page_type = None  # file or directory
 
     # remove slashes at the end to compare efficiently
@@ -1258,14 +1259,22 @@ def web_address_navigator(browser, link):
                 total_timeouts += 1
                 sleep(2)
 
+            except WebDriverException as wde:
+                if total_web_driver_error >= 7:
+                    raise WebDriverException(
+                        "Web driver exception to GET '{}' webpage.\n\t{}".format(str(link).encode("utf-8"),
+                                                                                 str(wde).encode("utf-8")))
+                total_web_driver_error += 1
+                sleep(2)
+
 
 @contextmanager
 def interruption_handler(
-    threaded=False,
-    SIG_type=signal.SIGINT,
-    handler=signal.SIG_IGN,
-    notify=None,
-    logger=None,
+        threaded=False,
+        SIG_type=signal.SIGINT,
+        handler=signal.SIG_IGN,
+        notify=None,
+        logger=None,
 ):
     """Handles external interrupt, usually initiated by the user like
     KeyboardInterrupt with CTRL+C"""
@@ -1286,7 +1295,7 @@ def interruption_handler(
 
 
 def highlight_print(
-    username=None, message=None, priority=None, level=None, logger=None
+        username=None, message=None, priority=None, level=None, logger=None
 ):
     """ Print headers in a highlighted style """
     # can add other highlighters at other priorities enriching this function
@@ -2001,11 +2010,11 @@ def get_action_delay(action):
     config = Settings.action_delays
 
     if (
-        not config
-        or action not in config
-        or config["enabled"] is not True
-        or config[action] is None
-        or isinstance(config[action], (int, float)) is not True
+            not config
+            or action not in config
+            or config["enabled"] is not True
+            or config[action] is None
+            or isinstance(config[action], (int, float)) is not True
     ):
         return defaults[action]
 
@@ -2014,13 +2023,13 @@ def get_action_delay(action):
 
     # randomize the custom delay in user-defined range
     if (
-        config["randomize"] is True
-        and isinstance(config["random_range"], tuple)
-        and len(config["random_range"]) == 2
-        and all(
-            (isinstance(i, (type(None), int, float)) for i in config["random_range"])
-        )
-        and any(not isinstance(i, type(None)) for i in config["random_range"])
+            config["randomize"] is True
+            and isinstance(config["random_range"], tuple)
+            and len(config["random_range"]) == 2
+            and all(
+        (isinstance(i, (type(None), int, float)) for i in config["random_range"])
+    )
+            and any(not isinstance(i, type(None)) for i in config["random_range"])
     ):
         min_range = config["random_range"][0]
         max_range = config["random_range"][1]
@@ -2181,7 +2190,7 @@ def get_epoch_time_diff(time_stamp, logger):
 
         former_epoch = (log_time - datetime.datetime(1970, 1, 1)).total_seconds()
         cur_epoch = (
-            datetime.datetime.now() - datetime.datetime(1970, 1, 1)
+                datetime.datetime.now() - datetime.datetime(1970, 1, 1)
         ).total_seconds()
 
         return cur_epoch - former_epoch
@@ -2249,11 +2258,11 @@ def progress_tracker(current_value, highest_value, initial_time, logger):
         tracker_line = "-----------------------------------"
         filled_index = int(progress_percent / 2.77)
         progress_container = (
-            "[" + tracker_line[:filled_index] + "+" + tracker_line[filled_index:] + "]"
+                "[" + tracker_line[:filled_index] + "+" + tracker_line[filled_index:] + "]"
         )
         progress_container = (
-            progress_container[: filled_index + 1].replace("-", "=")
-            + progress_container[filled_index + 1 :]
+                progress_container[: filled_index + 1].replace("-", "=")
+                + progress_container[filled_index + 1:]
         )
 
         total_message = (
@@ -2410,7 +2419,7 @@ def get_cord_location(browser, location):
 
 
 def get_bounding_box(
-    latitude_in_degrees, longitude_in_degrees, half_side_in_miles, logger
+        latitude_in_degrees, longitude_in_degrees, half_side_in_miles, logger
 ):
     if half_side_in_miles == 0:
         logger.error("Check your Radius its lower then 0")

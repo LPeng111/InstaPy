@@ -298,9 +298,7 @@ class InstaPy:
             "food",
             "travel",
             "sports",
-            "cat",
-            "huachenyu",
-            "entertainment",
+            "entertainment"
         ]
         self.allowed_pod_engagement_modes = ["no_comments", "light", "normal", "heavy"]
 
